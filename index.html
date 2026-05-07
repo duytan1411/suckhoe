@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fitness Recomp AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen p-5 text-slate-800">
+
+<div class="max-w-7xl mx-auto space-y-6">
+
+  <div class="bg-black text-white rounded-3xl p-8 shadow-2xl">
+    <h1 class="text-4xl font-bold">🔥 Fitness Recomp AI</h1>
+    <p class="text-slate-300 mt-2">TDEE • Macro • Tracking</p>
+  </div>
+
+  <div class="grid lg:grid-cols-2 gap-6">
+
+    <div class="bg-white rounded-3xl p-6 shadow-lg space-y-4">
+
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-2xl font-bold">📊 Thông tin cơ thể</h2>
+          <p class="text-slate-500">Cá nhân hoá calories</p>
+        </div>
+
+        <div class="text-right">
+          <p class="text-sm text-slate-500">Profile</p>
+          <h3 id="profileNamePreview" class="font-bold text-lg">Fitness User</h3>
+        </div>
+      </div>
+
+      <div>
+        <label class="font-semibold">Tên</label>
+        <input id="profileName" type="text" placeholder="Ví dụ: Tuấn" class="w-full border rounded-2xl p-3 mt-2">
+      </div>
+
+      <div>
+        <label class="font-semibold">Mục tiêu</label>
+        <select id="goalType" class="w-full border rounded-2xl p-3 mt-2">
+          <option value="cut">Giảm mỡ</option>
+          <option value="maintain">Giữ dáng</option>
+          <option value="bulk">Tăng cơ</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="font-semibold">Cân nặng (kg)</label>
+        <input id="weight" type="number" value="65" class="w-full border rounded-2xl p-3 mt-2">
+      </div>
+
+      <div>
+        <label class="font-semibold">Chiều cao (cm)</label>
+        <input id="height" type="number" value="175" class="w-full border rounded-2xl p-3 mt-2">
+      </div>
+
+      <div>
+        <label class="font-semibold">Tuổi</label>
+        <input id="age" type="number" value="18" class="w-full border rounded-2xl p-3 mt-2">
+      </div>
+
+      <div>
+        <label class="font-semibold">Protein / kg</label>
+        <select id="proteinMultiplier" class="w-full border rounded-2xl p-3 mt-2">
+          <option value="1.8">1.8g / kg</option>
+          <option value="2" selected>2g / kg</option>
+          <option value="2.2">2.2g / kg</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="font-semibold">Mức độ vận động</label>
+        <select id="activity" class="w-full border rounded-2xl p-3 mt-2">
+          <option value="1.2">Ít vận động • Không tập</option>
+          <option value="1.375">Tập nhẹ • 1-3 buổi/tuần</option>
+          <option value="1.55" selected>Tập vừa • 3-5 buổi/tuần</option>
+          <option value="1.725">Tập nặng • 6-7 buổi/tuần</option>
+          <option value="1.9">Athlete • Cường độ cao</option>
+        </select>
+      </div>
+
+      <button onclick="calculate()" class="w-full bg-black text-white rounded-2xl p-4 font-bold">
+        Tính Calories
+      </button>
+
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 shadow-lg space-y-5">
+
+      <h2 class="text-2xl font-bold">⚡ Kết quả</h2>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div class="bg-slate-100 rounded-2xl p-5">
+          <p>BMR</p>
+          <h3 id="bmr" class="text-3xl font-bold">0</h3>
+        </div>
+
+        <div class="bg-slate-100 rounded-2xl p-5">
+          <p>TDEE</p>
+          <h3 id="tdee" class="text-3xl font-bold">0</h3>
+        </div>
+      </div>
+
+      <div class="bg-green-100 rounded-3xl p-5">
+        <p id="goalLabel">Calories giảm mỡ</p>
+        <h3 id="targetCalories" class="text-4xl font-black">0 kcal</h3>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4">
+        <div class="bg-blue-100 rounded-2xl p-4 text-center">
+          <p>Protein</p>
+          <h3 id="protein" class="text-2xl font-bold">0g</h3>
+        </div>
+
+        <div class="bg-yellow-100 rounded-2xl p-4 text-center">
+          <p>Carb</p>
+          <h3 id="carb" class="text-2xl font-bold">0g</h3>
+        </div>
+
+        <div class="bg-red-100 rounded-2xl p-4 text-center">
+          <p>Fat</p>
+          <h3 id="fat" class="text-2xl font-bold">0g</h3>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="bg-white rounded-3xl p-6 shadow-lg">
+
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5">
+      <h2 class="text-2xl font-bold">🍱 Kho món ăn</h2>
+
+      <input
+        id="foodSearch"
+        type="text"
+        placeholder="🔍 Tìm món ăn..."
+        class="border rounded-2xl px-4 py-3 w-full md:w-72">
+      <div class="flex gap-2">
+        <button onclick="saveFood()" class="bg-black text-white px-5 py-3 rounded-2xl font-semibold">
+          Lưu món ăn
+        </button>
+
+        <button id="cancelEditBtn" onclick="cancelEditFood()"
+          class="hidden bg-slate-300 text-black px-5 py-3 rounded-2xl font-semibold">
+          Hủy sửa
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-slate-100 rounded-3xl p-5 mb-6">
+
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="font-bold text-lg">⚡ Import nhanh</h3>
+
+        <button onclick="quickAddFoods()" class="bg-blue-600 text-white px-4 py-2 rounded-2xl font-bold">
+          Import
+        </button>
+      </div>
+
+      <textarea id="quickFoodInput" rows="10" class="w-full border rounded-2xl p-4 font-mono text-sm" placeholder="Hỗ trợ nhiều định dạng, cách nhau bằng dòng trống:&#10;&#10;100g Bánh Naan Tỏi&#10;330 kcal | 12g fat | 9g protein | 50g carb&#10;&#10;Trong 100g Đùi gà KFC&#10;Calo: ~250 kcal&#10;Protein (Đạm): ~18g&#10;Fat (Chất béo): ~16g&#10;Carb (Tinh bột): ~8g&#10;&#10;Whipping cream (100g)&#10;~340 kcal | ~2g protein | ~36g fat | ~3g carb"></textarea>
+
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-7 gap-4 mb-6">
+      <input id="foodName" type="text" placeholder="Tên món" class="border rounded-2xl p-3">
+      <input id="foodKcal" type="number" placeholder="Kcal" class="border rounded-2xl p-3">
+      <input id="foodProtein" type="number" placeholder="Protein" class="border rounded-2xl p-3">
+      <input id="foodCarb" type="number" placeholder="Carb" class="border rounded-2xl p-3">
+      <input id="foodFat" type="number" placeholder="Fat" class="border rounded-2xl p-3">
+      <input id="foodBaseAmount" type="number" value="100" class="border rounded-2xl p-3">
+
+      <select id="foodUnit" class="border rounded-2xl p-3">
+        <option value="g">Gram</option>
+        <option value="quả">Quả</option>
+        <option value="trái">Trái</option>
+        <option value="ml">ml</option>
+        <option value="lon">Lon</option>
+      </select>
+    </div>
+
+    <div id="mealContainer" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+
+  </div>
+
+  <div class="bg-white rounded-3xl p-6 shadow-lg">
+
+    <div class="flex justify-between items-center mb-5">
+      <h2 class="text-2xl font-bold">🍽️ Hôm nay đã ăn</h2>
+
+      <button onclick="saveDailyLog()" class="bg-green-600 text-white px-5 py-3 rounded-2xl font-bold">
+        Lưu ngày hôm nay
+      </button>
+    </div>
+
+    <div class="mb-4">
+      <input
+        id="todayFoodSearch"
+        type="text"
+        placeholder="🔍 Tìm nhanh món ăn hôm nay..."
+        class="w-full border rounded-2xl p-3">
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-4 mb-6">
+      <select id="todayFoodSelect" class="border rounded-2xl p-3"></select>
+
+      <input id="todayFoodAmount" type="number" placeholder="Số lượng" class="border rounded-2xl p-3">
+
+      <button onclick="addTodayFood()" class="bg-black text-white rounded-2xl p-3 font-bold">
+        + Thêm hôm nay
+      </button>
+    </div>
+
+    <div id="todayFoods" class="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-6"></div>
+
+    <div class="bg-slate-100 rounded-3xl p-5">
+
+      <h3 class="text-xl font-bold mb-4">📊 Tổng hôm nay</h3>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+
+        <div class="bg-white rounded-2xl p-4">
+          <p>Calories</p>
+          <h3 id="todayCalories" class="text-2xl font-bold">0 kcal</h3>
+          <p id="todayCaloriesStatus" class="text-sm text-slate-500 mt-1">-</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4">
+          <p>Protein</p>
+          <h3 id="todayProtein" class="text-2xl font-bold">0g</h3>
+          <p id="todayProteinStatus" class="text-sm text-slate-500 mt-1">-</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4">
+          <p>Carb</p>
+          <h3 id="todayCarb" class="text-2xl font-bold">0g</h3>
+          <p id="todayCarbStatus" class="text-sm text-slate-500 mt-1">-</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4">
+          <p>Fat</p>
+          <h3 id="todayFat" class="text-2xl font-bold">0g</h3>
+          <p id="todayFatStatus" class="text-sm text-slate-500 mt-1">-</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    </div>
+
+    </div>
+
+    <div class="mt-6">
+
+      <div class="bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-3xl p-5 mb-5">
+
+        <h3 class="text-2xl font-bold mb-4">📉 Tổng thâm hụt</h3>
+
+        <div class="grid md:grid-cols-2 gap-4">
+
+          <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
+            <p class="text-sm opacity-80">Tổng calories thâm hụt</p>
+            <h3 id="totalDeficit" class="text-3xl font-black mt-1">0 kcal</h3>
+          </div>
+
+          <div class="bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
+            <p class="text-sm opacity-80">Ước tính mỡ đã mất</p>
+            <h3 id="estimatedFatLoss" class="text-3xl font-black mt-1">0 kg</h3>
+          </div>
+
+        </div>
+
+        <p class="text-sm opacity-80 mt-4">
+          1kg mỡ cơ thể ≈ 7700 kcal
+        </p>
+
+      </div>
+
+      <h3 class="text-2xl font-bold mb-4">📅 Lịch sử hằng ngày</h3>
+      <div id="dailyHistory" class="space-y-4"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+let foods = JSON.parse(localStorage.getItem('foods')) || [];
+let editingFoodIndex = null;
+let todayFoods = JSON.parse(localStorage.getItem('today_foods')) || [];
+let dailyHistory = JSON.parse(localStorage.getItem('daily_history')) || [];
+
+const todayDate = new Date().toLocaleDateString('vi-VN');
+const savedDate = localStorage.getItem('today_date');
+
+if (savedDate !== todayDate) {
+  todayFoods = [];
+  localStorage.setItem('today_foods', JSON.stringify([]));
+  localStorage.setItem('today_date', todayDate);
+}
+
+function saveProfile() {
+  const profile = {
+    profileName: document.getElementById('profileName').value,
+    goalType: document.getElementById('goalType').value,
+    weight: document.getElementById('weight').value,
+    height: document.getElementById('height').value,
+    age: document.getElementById('age').value,
+    proteinMultiplier: document.getElementById('proteinMultiplier').value,
+    activity: document.getElementById('activity').value
+  };
+
+  localStorage.setItem('fitness_profile', JSON.stringify(profile));
+}
+
+function loadProfile() {
+
+  const profile = JSON.parse(localStorage.getItem('fitness_profile'));
+
+  if (!profile) return;
+
+  Object.keys(profile).forEach(key => {
+    const element = document.getElementById(key);
+
+    if (element) {
+      element.value = profile[key];
+    }
+  });
+}
+
+function calculate() {
+
+  const weight = Number(document.getElementById('weight').value);
+  const height = Number(document.getElementById('height').value);
+  const age = Number(document.getElementById('age').value);
+  const activity = Number(document.getElementById('activity').value);
+  const proteinMultiplier = Number(document.getElementById('proteinMultiplier').value);
+  const selectedGoal = document.getElementById('goalType').value;
+
+  const bmr = (13.587 * weight) + (9.613 * height) - (4.799 * age) + 88.362;
+
+  const tdee = bmr * activity;
+
+  let targetCalories = tdee;
+
+  if (selectedGoal === 'cut') {
+    targetCalories = tdee - 500;
+  }
+
+  if (selectedGoal === 'bulk') {
+    targetCalories = tdee + 300;
+  }
+
+  const protein = weight * proteinMultiplier;
+  const proteinCalories = protein * 4;
+
+  const remainingCalories = targetCalories - proteinCalories;
+
+  const carb = (remainingCalories * 0.55) / 4;
+  const fat = (remainingCalories * 0.45) / 9;
+
+  document.getElementById('bmr').innerText = Math.round(bmr);
+  document.getElementById('tdee').innerText = Math.round(tdee);
+  document.getElementById('targetCalories').innerText = Math.round(targetCalories) + ' kcal';
+
+  document.getElementById('protein').innerText = Math.round(protein) + 'g';
+  document.getElementById('carb').innerText = Math.round(carb) + 'g';
+  document.getElementById('fat').innerText = Math.round(fat) + 'g';
+
+  const profileName = document.getElementById('profileName').value || 'Fitness User';
+  document.getElementById('profileNamePreview').innerText = profileName;
+
+  const goalLabels = {
+    cut: 'Calories giảm mỡ',
+    maintain: 'Calories duy trì',
+    bulk: 'Calories tăng cơ'
+  };
+
+  document.getElementById('goalLabel').innerText = goalLabels[selectedGoal];
+
+  saveProfile();
+}
+
+function extractNumber(str) {
+  // Strip leading ~ or ≈ or spaces, then parse float
+  const m = str.match(/[~≈]?\s*(\d+(?:\.\d+)?)/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+function parseImportBlock(blockText) {
+  const normalized = blockText.replace(/\r/g, '').trim();
+  const lines = normalized.split('\n').map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return null;
+
+  let baseAmount = 100, unit = 'g', name = '';
+  let kcal = 0, protein = 0, fat = 0, carb = 0;
+  let nameLineIdx = -1;
+
+  const UNITS = '(g|gram|gam|kg|ml|l|quả|trái|lon|cái|miếng|chén|bát|muỗng|tbsp|tsp|cup|phần|serving)';
+
+  // Thử từng dòng tìm dòng chứa tên món
+  for (let i = 0; i < Math.min(lines.length, 3); i++) {
+    const line = lines[i];
+
+    // "Trong 100g Tên Món" / "Trong 100 g Tên Món"
+    let m = line.match(new RegExp(`^Trong\\s+(\\d+(?:\\.\\d+)?)\\s*${UNITS}\\s+(.+)`, 'i'));
+    if (m) { baseAmount = parseFloat(m[1]); unit = m[2].toLowerCase(); name = m[3].trim(); nameLineIdx = i; break; }
+
+    // "100g Tên Món" / "100.0g Tên" / "100 g Tên"
+    m = line.match(new RegExp(`^(\\d+(?:\\.\\d+)?)\\s*${UNITS}\\s+(.+)`, 'i'));
+    if (m) { baseAmount = parseFloat(m[1]); unit = m[2].toLowerCase(); name = m[3].trim(); nameLineIdx = i; break; }
+
+    // "Tên Món (100g)" / "Tên Món (100 g)"
+    m = line.match(new RegExp(`^(.+?)\\s*\\((\\d+(?:\\.\\d+)?)\\s*${UNITS}\\)\\s*$`, 'i'));
+    if (m) { name = m[1].trim(); baseAmount = parseFloat(m[2]); unit = m[3].toLowerCase(); nameLineIdx = i; break; }
+
+    // "Tên Món - 100g" / "Tên Món: 100g"
+    m = line.match(new RegExp(`^(.+?)\\s*[-:–]\\s*(\\d+(?:\\.\\d+)?)\\s*${UNITS}\\s*$`, 'i'));
+    if (m) { name = m[1].trim(); baseAmount = parseFloat(m[2]); unit = m[3].toLowerCase(); nameLineIdx = i; break; }
+
+    // Dòng chỉ có tên (không có số gram) → dùng 100g mặc định
+    // Điều kiện: dòng không chứa số + đơn vị dinh dưỡng keyword
+    const isNutrientLine = /kcal|calo|protein|đạm|fat|béo|carb|tinh bột|năng lượng/i.test(line);
+    if (!isNutrientLine && !/^\d/.test(line) && line.length > 2) {
+      name = line;
+      baseAmount = 100;
+      unit = 'g';
+      nameLineIdx = i;
+      break;
+    }
+  }
+
+  if (!name) return null;
+
+  // Ghép tất cả các dòng còn lại (trừ dòng tên) để parse macro
+  // Expand dòng có | thành nhiều dòng: "330 kcal | 12g fat" → ["330 kcal", "12g fat"]
+  const restLines = lines
+    .filter((_, i) => i !== nameLineIdx)
+    .flatMap(l => l.split(/\s*[|,;]\s*/));
+  const rest = restLines.join('\n');
+
+  // Helper: tìm số với nhiều định dạng (có thể có ~≈ trước)
+  function findVal(patterns) {
+    for (const pat of patterns) {
+      const m = rest.match(pat);
+      if (m) {
+        const raw = m[1];
+        const n = extractNumber(raw);
+        if (n !== null) return n;
+      }
+    }
+    return 0;
+  }
+
+  // KCAL — "330 kcal", "~330 kcal", "Calo: ~250 kcal", "Năng lượng: 330kcal", "330cal"
+  kcal = findVal([
+    /[~≈]?\s*(\d+(?:\.\d+)?)\s*kcal/i,
+    /(?:calo(?:rie)?s?|năng lượng|energy)[^:\n]*[:\s]+([~≈]?\s*\d+(?:\.\d+)?)/i,
+    /[~≈]?\s*(\d+(?:\.\d+)?)\s*cal(?!\w)/i,
+  ]);
+
+  // PROTEIN — "9g protein", "protein: ~9g", "Protein (Đạm): 18g", "đạm: 9g"
+  protein = findVal([
+    /(\d+(?:\.\d+)?)\s*g\s*protein/i,
+    /(?:protein|đạm|chất đạm)[^:\n]*[:\s]+([~≈]?\s*\d+(?:\.\d+)?)/i,
+  ]);
+
+  // FAT — "12g fat", "Fat (Chất béo): ~16g", "béo: 12g", "lipid: 12g"
+  fat = findVal([
+    /(\d+(?:\.\d+)?)\s*g\s*(?:fat|béo|chất béo|lipid)/i,
+    /(?:fat|chất béo|béo|lipid)[^:\n]*[:\s]+([~≈]?\s*\d+(?:\.\d+)?)/i,
+  ]);
+
+  // CARB — "50g carb", "Carb (Tinh bột): 8g", "tinh bột: 50g", "glucid"
+  carb = findVal([
+    /(\d+(?:\.\d+)?)\s*g\s*(?:carb|tinh bột|glucid)/i,
+    /(?:carbs?|tinh bột|chất bột|glucid)[^:\n]*[:\s]+([~≈]?\s*\d+(?:\.\d+)?)/i,
+  ]);
+
+  return { baseAmount, unit, name, kcal, protein, fat, carb };
+}
+
+function quickAddFoods() {
+
+  const input = document.getElementById('quickFoodInput').value.trim();
+
+  if (!input) {
+    alert('Nhập dữ liệu trước');
+    return;
+  }
+
+  // Tách nhiều món bằng dòng trống
+  const blocks = input.split(/\n\s*\n/).map(b => b.trim()).filter(Boolean);
+
+  const imported = [];
+  const failed = [];
+
+  blocks.forEach((block, i) => {
+    const food = parseImportBlock(block);
+    if (food) {
+      imported.push(food);
+    } else {
+      failed.push(i + 1);
+    }
+  });
+
+  if (imported.length === 0) {
+    alert('❌ Không nhận dạng được món nào.\n\nFormat đúng:\n100.0g Tên Món\n330 kcal\n12g fat\n9g protein\n50g carb');
+    return;
+  }
+
+  if (editingFoodIndex !== null && imported.length === 1) {
+    foods[editingFoodIndex] = imported[0];
+    editingFoodIndex = null;
+    document.getElementById('cancelEditBtn').classList.add('hidden');
+  } else {
+    imported.forEach(food => foods.push(food));
+  }
+
+  localStorage.setItem('foods', JSON.stringify(foods));
+  document.getElementById('quickFoodInput').value = '';
+  renderFoods();
+
+  let msg = `✅ Import thành công ${imported.length} món!`;
+  if (failed.length) msg += `\n⚠️ Không đọc được block: ${failed.join(', ')}`;
+  alert(msg);
+}
+
+window.editFood = function(index) {
+
+  const food = foods[index];
+
+  if (!food) return;
+
+  editingFoodIndex = index;
+
+  document.getElementById('foodName').value = food.name;
+  document.getElementById('foodKcal').value = food.kcal;
+  document.getElementById('foodProtein').value = food.protein;
+  document.getElementById('foodCarb').value = food.carb;
+  document.getElementById('foodFat').value = food.fat;
+  document.getElementById('foodBaseAmount').value = food.baseAmount;
+  document.getElementById('foodUnit').value = food.unit;
+
+  document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelEditFood() {
+
+  editingFoodIndex = null;
+
+  document.getElementById('foodName').value = '';
+  document.getElementById('foodKcal').value = '';
+  document.getElementById('foodProtein').value = '';
+  document.getElementById('foodCarb').value = '';
+  document.getElementById('foodFat').value = '';
+
+  document.getElementById('cancelEditBtn').classList.add('hidden');
+}
+
+function saveFood() {
+
+  const food = {
+    name: document.getElementById('foodName').value,
+    kcal: Number(document.getElementById('foodKcal').value),
+    protein: Number(document.getElementById('foodProtein').value),
+    carb: Number(document.getElementById('foodCarb').value),
+    fat: Number(document.getElementById('foodFat').value),
+    baseAmount: Number(document.getElementById('foodBaseAmount').value),
+    unit: document.getElementById('foodUnit').value
+  };
+
+  if (!food.name) {
+    alert('Nhập tên món');
+    return;
+  }
+
+  foods.push(food);
+
+  localStorage.setItem('foods', JSON.stringify(foods));
+
+  renderFoods();
+}
+
+window.deleteFood = function(index) {
+  foods.splice(index, 1);
+  localStorage.setItem('foods', JSON.stringify(foods));
+  renderFoods();
+}
+
+function renderFoods() {
+
+  const container = document.getElementById('mealContainer');
+  container.innerHTML = '';
+
+  const searchValue = document.getElementById('foodSearch')?.value?.toLowerCase() || '';
+
+  const filteredFoods = foods.filter(food =>
+    food.name.toLowerCase().includes(searchValue)
+  );
+
+  if (filteredFoods.length === 0) {
+    container.innerHTML = `
+      <div class="col-span-full bg-slate-100 rounded-3xl p-6 text-center text-slate-500 font-semibold">
+        Không tìm thấy món ăn
+      </div>
+    `;
+    return;
+  }
+
+  filteredFoods.forEach((food) => {
+
+    const index = foods.indexOf(food);
+
+    const div = document.createElement('div');
+
+    div.className = 'bg-white border border-slate-200 rounded-3xl p-4 shadow-sm hover:shadow-md transition';
+
+    div.innerHTML = `
+      <div class="flex justify-between items-start mb-3">
+        <h3 class="text-xl font-bold">${food.name}</h3>
+
+        <div class="flex gap-2">
+          <button onclick="editFood(${index})" class="bg-blue-500 text-white px-3 py-1 rounded-xl text-sm">
+            Sửa
+          </button>
+
+          <button onclick="deleteFood(${index})" class="bg-red-500 text-white px-3 py-1 rounded-xl text-sm">
+            Xóa
+          </button>
+        </div>
+      </div>
+
+      <div class="space-y-2 text-slate-700">
+        <p>🔥 ${food.kcal} kcal</p>
+        <p>🥩 ${food.protein}g</p>
+        <p>🍚 ${food.carb}g</p>
+        <p>🥑 ${food.fat}g</p>
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+
+  renderFoodSelect();
+}
+
+function renderFoodSelect() {
+
+  const select = document.getElementById('todayFoodSelect');
+
+  select.innerHTML = '';
+
+  const searchValue = document.getElementById('todayFoodSearch')?.value?.toLowerCase() || '';
+
+  const filteredFoods = foods.filter(food =>
+    food.name.toLowerCase().includes(searchValue)
+  );
+
+  if (filteredFoods.length === 0) {
+
+    const option = document.createElement('option');
+
+    option.innerText = 'Không tìm thấy món ăn';
+    option.disabled = true;
+    option.selected = true;
+
+    select.appendChild(option);
+
+    return;
+  }
+
+  filteredFoods.forEach((food) => {
+
+    const index = foods.indexOf(food);
+
+    const option = document.createElement('option');
+
+    option.value = index;
+    option.innerText = `${food.name} (${food.baseAmount} ${food.unit})`;
+
+    select.appendChild(option);
+  });
+}
+
+function addTodayFood() {
+
+  const index = document.getElementById('todayFoodSelect').value;
+  const amount = Number(document.getElementById('todayFoodAmount').value);
+
+  const baseFood = foods[index];
+
+  if (!baseFood || amount <= 0) {
+    alert('Nhập dữ liệu hợp lệ');
+    return;
+  }
+
+  const ratio = amount / baseFood.baseAmount;
+
+  const food = {
+    name: baseFood.name,
+    amount,
+    unit: baseFood.unit,
+    kcal: Math.round(baseFood.kcal * ratio),
+    protein: Math.round(baseFood.protein * ratio),
+    carb: Math.round(baseFood.carb * ratio),
+    fat: Math.round(baseFood.fat * ratio)
+  };
+
+  todayFoods.push(food);
+
+  localStorage.setItem('today_foods', JSON.stringify(todayFoods));
+
+  renderTodayFoods();
+}
+
+window.removeTodayFood = function(index) {
+  todayFoods.splice(index, 1);
+  localStorage.setItem('today_foods', JSON.stringify(todayFoods));
+  renderTodayFoods();
+}
+
+function renderTodayFoods() {
+
+  const container = document.getElementById('todayFoods');
+
+  container.innerHTML = '';
+
+  let totalCalories = 0;
+  let totalProtein = 0;
+  let totalCarb = 0;
+  let totalFat = 0;
+
+  todayFoods.forEach((food, index) => {
+
+    totalCalories += food.kcal;
+    totalProtein += food.protein;
+    totalCarb += food.carb;
+    totalFat += food.fat;
+
+    const div = document.createElement('div');
+
+    div.className = 'bg-slate-100 rounded-3xl p-5';
+
+    div.innerHTML = `
+      <div class="flex justify-between items-start mb-3">
+        <h3 class="text-xl font-bold">${food.name}</h3>
+
+        <button onclick="removeTodayFood(${index})" class="bg-red-500 text-white px-3 py-1 rounded-xl text-sm">
+          Xóa
+        </button>
+      </div>
+
+      <div class="space-y-2 text-slate-700">
+        <p>🔥 ${food.kcal} kcal</p>
+        <p>🥩 ${food.protein}g</p>
+        <p>🍚 ${food.carb}g</p>
+        <p>🥑 ${food.fat}g</p>
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+
+  document.getElementById('todayCalories').innerText = totalCalories + ' kcal';
+  document.getElementById('todayProtein').innerText = totalProtein + 'g';
+  document.getElementById('todayCarb').innerText = totalCarb + 'g';
+  document.getElementById('todayFat').innerText = totalFat + 'g';
+
+  const targetCalories = parseInt(document.getElementById('targetCalories').innerText) || 0;
+  const targetProtein = parseInt(document.getElementById('protein').innerText) || 0;
+  const targetCarb = parseInt(document.getElementById('carb').innerText) || 0;
+  const targetFat = parseInt(document.getElementById('fat').innerText) || 0;
+
+  const calorieDiff = totalCalories - targetCalories;
+  const proteinDiff = totalProtein - targetProtein;
+  const carbDiff = totalCarb - targetCarb;
+  const fatDiff = totalFat - targetFat;
+
+  document.getElementById('todayCaloriesStatus').innerText = calorieDiff >= 0
+    ? `📈 Dư ${calorieDiff} kcal`
+    : `📉 Thiếu ${Math.abs(calorieDiff)} kcal`;
+
+  document.getElementById('todayProteinStatus').innerText = proteinDiff >= 0
+    ? `📈 Dư ${proteinDiff}g`
+    : `📉 Thiếu ${Math.abs(proteinDiff)}g`;
+
+  document.getElementById('todayCarbStatus').innerText = carbDiff >= 0
+    ? `📈 Dư ${carbDiff}g`
+    : `📉 Thiếu ${Math.abs(carbDiff)}g`;
+
+  document.getElementById('todayFatStatus').innerText = fatDiff >= 0
+    ? `📈 Dư ${fatDiff}g`
+    : `📉 Thiếu ${Math.abs(fatDiff)}g`;
+}
+
+function saveDailyLog() {
+
+  if (todayFoods.length === 0) {
+    alert('Chưa có dữ liệu');
+    return;
+  }
+
+  const log = {
+    date: todayDate,
+    calories: document.getElementById('todayCalories').innerText,
+    protein: document.getElementById('todayProtein').innerText,
+    carb: document.getElementById('todayCarb').innerText,
+    fat: document.getElementById('todayFat').innerText,
+    foods: [...todayFoods]
+  };
+
+  dailyHistory = dailyHistory.filter(item => item.date !== todayDate);
+
+  dailyHistory.unshift(log);
+
+  localStorage.setItem('daily_history', JSON.stringify(dailyHistory));
+
+  renderDailyHistory();
+loadProfile();
+}
+
+function renderDailyHistory() {
+
+  let totalDeficit = 0;
+
+  const container = document.getElementById('dailyHistory');
+
+  container.innerHTML = '';
+
+  const targetCalories = parseInt(document.getElementById('targetCalories').innerText) || 0;
+  const targetProtein = parseInt(document.getElementById('protein').innerText) || 0;
+  const targetCarb = parseInt(document.getElementById('carb').innerText) || 0;
+  const targetFat = parseInt(document.getElementById('fat').innerText) || 0;
+
+  dailyHistory.forEach((day, index) => {
+
+    const calories = parseInt(day.calories);
+    const protein = parseInt(day.protein);
+    const carb = parseInt(day.carb);
+    const fat = parseInt(day.fat);
+
+    const calorieDiff = calories - targetCalories;
+
+    if (calorieDiff < 0) {
+      totalDeficit += Math.abs(calorieDiff);
+    }
+
+    const calorieStatus = calorieDiff > 0
+      ? `📈 Lố ${calorieDiff} kcal`
+      : `📉 Thiếu ${Math.abs(calorieDiff)} kcal`;
+
+    const proteinStatus = protein - targetProtein;
+    const carbStatus = carb - targetCarb;
+    const fatStatus = fat - targetFat;
+
+    let foodsHtml = '';
+
+    day.foods.forEach((food, foodIndex) => {
+      foodsHtml += `
+        <li class="flex items-center justify-between bg-white rounded-2xl px-4 py-3">
+
+          <div>
+            <span class="font-semibold">${food.name}</span>
+            <span class="text-slate-500">
+              - ${food.amount} ${food.unit}
+            </span>
+          </div>
+
+          <button
+            onclick="window.deleteHistoryFood(${index}, ${foodIndex})"
+            class="bg-red-500 text-white px-3 py-1 rounded-xl text-sm">
+            Xóa
+          </button>
+
+        </li>
+      `;
+    });
+
+    const div = document.createElement('div');
+
+    div.className = 'bg-slate-100 rounded-3xl p-5';
+
+    const scoreColor = calorieDiff > 0
+      ? 'text-orange-500'
+      : 'text-emerald-600';
+
+    div.innerHTML = `
+      <div class="flex items-center justify-between gap-4">
+
+        <div class="flex items-center gap-4">
+
+          <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-2xl">
+            📅
+          </div>
+
+          <div>
+            <h3 class="text-lg font-bold">${day.date}</h3>
+            <p class="text-sm ${scoreColor}">${calorieStatus}</p>
+          </div>
+
+        </div>
+
+        <div class="flex items-center gap-2">
+
+          <div class="bg-slate-100 rounded-2xl px-4 py-2 font-bold text-sm">
+            🔥 ${day.calories}
+          </div>
+
+          <button onclick="window.toggleHistoryDetail(${index})" class="bg-slate-900 text-white px-3 py-2 rounded-2xl text-sm font-semibold">
+            Chi tiết
+          </button>
+
+          <button onclick="window.deleteDailyHistory(${index})" class="bg-red-500 text-white px-3 py-2 rounded-2xl text-sm font-semibold">
+            Xóa
+          </button>
+
+        </div>
+
+      </div>
+
+      <div id="history-detail-${index}" class="hidden mt-4 border-t border-slate-200 pt-4">
+
+        <div class="grid grid-cols-3 gap-2 mb-4">
+
+          <div class="bg-slate-100 rounded-2xl p-3 text-center">
+            <div class="font-bold">🥩 ${day.protein}</div>
+            <div class="text-sm text-slate-500">${proteinStatus >= 0 ? '+' : ''}${proteinStatus}g</div>
+          </div>
+
+          <div class="bg-slate-100 rounded-2xl p-3 text-center">
+            <div class="font-bold">🍚 ${day.carb}</div>
+            <div class="text-sm text-slate-500">${carbStatus >= 0 ? '+' : ''}${carbStatus}g</div>
+          </div>
+
+          <div class="bg-slate-100 rounded-2xl p-3 text-center">
+            <div class="font-bold">🥑 ${day.fat}</div>
+            <div class="text-sm text-slate-500">${fatStatus >= 0 ? '+' : ''}${fatStatus}g</div>
+          </div>
+
+        </div>
+
+        <ul class="space-y-2 text-slate-700">
+          ${foodsHtml}
+        </ul>
+
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+
+  document.getElementById('totalDeficit').innerText = `${Math.round(totalDeficit)} kcal`;
+
+  const estimatedFatLoss = totalDeficit / 7700;
+
+  document.getElementById('estimatedFatLoss').innerText = `${estimatedFatLoss.toFixed(2)} kg`;
+}
+
+window.toggleHistoryDetail = function(index) {
+  const element = document.getElementById(`history-detail-${index}`);
+  element.classList.toggle('hidden');
+}
+
+window.deleteHistoryFood = function(historyIndex, foodIndex) {
+
+  if (!dailyHistory[historyIndex]) {
+    return;
+  }
+
+  dailyHistory[historyIndex].foods.splice(foodIndex, 1);
+
+  let totalCalories = 0;
+  let totalProtein = 0;
+  let totalCarb = 0;
+  let totalFat = 0;
+
+  dailyHistory[historyIndex].foods.forEach(food => {
+    totalCalories += Number(food.kcal || 0);
+    totalProtein += Number(food.protein || 0);
+    totalCarb += Number(food.carb || 0);
+    totalFat += Number(food.fat || 0);
+  });
+
+  dailyHistory[historyIndex].calories = totalCalories + ' kcal';
+  dailyHistory[historyIndex].protein = totalProtein + 'g';
+  dailyHistory[historyIndex].carb = totalCarb + 'g';
+  dailyHistory[historyIndex].fat = totalFat + 'g';
+
+  localStorage.setItem('daily_history', JSON.stringify(dailyHistory));
+
+  renderDailyHistory();
+}
+
+window.deleteDailyHistory = function(index) {
+
+  console.log('Delete history index:', index);
+
+  if (!Array.isArray(dailyHistory)) {
+    dailyHistory = [];
+  }
+
+  dailyHistory = dailyHistory.filter((item, i) => i !== index);
+
+  localStorage.setItem('daily_history', JSON.stringify(dailyHistory));
+
+  const container = document.getElementById('dailyHistory');
+
+  container.innerHTML = '';
+
+  renderDailyHistory();
+
+  if (dailyHistory.length === 0) {
+    container.innerHTML = `
+      <div class="bg-slate-100 rounded-3xl p-6 text-center text-slate-500 font-semibold">
+        Chưa có lịch sử nào
+      </div>
+    `;
+  }
+
+  console.log('Remaining history:', dailyHistory.length);
+}
+
+console.assert(typeof calculate === 'function', 'calculate missing');
+console.assert(typeof quickAddFoods === 'function', 'quickAddFoods missing');
+console.assert(typeof window.toggleHistoryDetail === 'function', 'toggleHistoryDetail missing');
+console.assert(typeof window.deleteDailyHistory === 'function', 'deleteDailyHistory missing');
+console.assert(typeof window.deleteHistoryFood === 'function', 'deleteHistoryFood missing');
+
+calculate();
+renderFoods();
+renderTodayFoods();
+renderDailyHistory();
+
+[
+  'profileName',
+  'goalType',
+  'weight',
+  'height',
+  'age',
+  'proteinMultiplier',
+  'activity'
+].forEach(id => {
+  document.getElementById(id).addEventListener('input', calculate);
+  document.getElementById(id).addEventListener('change', calculate);
+});
+
+const todayFoodSearchInput = document.getElementById('todayFoodSearch');
+
+if (todayFoodSearchInput) {
+  todayFoodSearchInput.addEventListener('input', renderFoodSelect);
+}
+
+const foodSearchInput = document.getElementById('foodSearch');
+
+if (foodSearchInput) {
+  foodSearchInput.addEventListener('input', renderFoods);
+}
+
+</script>
+
+</body>
+</html>
