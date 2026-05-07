@@ -2,9 +2,21 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Fitness Recomp AI</title>
+  <meta name="description" content="Theo dõi Macro, TDEE và Recomp cá nhân hoá" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Recomp AI" />
+  <link id="pwa-manifest" rel="manifest" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { padding-top: env(safe-area-inset-top); padding-bottom: calc(env(safe-area-inset-bottom) + 1rem); }
+    #pwa-install-banner { display: none; }
+    #pwa-install-banner.show { display: flex; }
+  </style>
 </head>
 <body class="bg-slate-100 min-h-screen p-5 text-slate-800">
 
@@ -1063,6 +1075,159 @@ if (foodSearchInput) {
   foodSearchInput.addEventListener('input', renderFoods);
 }
 
+</script>
+
+
+<!-- PWA Install Banner -->
+<div id="pwa-install-banner" class="fixed bottom-4 left-4 right-4 z-50 items-center gap-3 bg-black text-white rounded-2xl px-5 py-4 shadow-2xl">
+  <div class="text-2xl">📲</div>
+  <div class="flex-1">
+    <div class="font-bold text-sm">Cài app Recomp AI</div>
+    <div class="text-xs text-slate-300">Dùng offline như app thật!</div>
+  </div>
+  <button id="pwa-install-btn" class="bg-white text-black font-bold text-sm px-4 py-2 rounded-xl">Cài ngay</button>
+  <button id="pwa-dismiss-btn" class="text-slate-400 text-xl leading-none ml-1">✕</button>
+</div>
+
+<script>
+// ─── PWA: Inline Manifest via Blob ───────────────────────────────────────────
+(function() {
+  const icons = [
+    {
+      // SVG icon encoded as data URI
+      src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='120' fill='%23000'/%3E%3Ctext x='50%25' y='54%25' font-size='300' text-anchor='middle' dominant-baseline='middle'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E",
+      sizes: "512x512",
+      type: "image/svg+xml",
+      purpose: "any maskable"
+    }
+  ];
+
+  const manifest = {
+    name: "Fitness Recomp AI",
+    short_name: "Recomp AI",
+    description: "Theo dõi Macro, TDEE và Recomp cá nhân hoá",
+    start_url: "./",
+    display: "standalone",
+    background_color: "#f1f5f9",
+    theme_color: "#000000",
+    orientation: "portrait-primary",
+    lang: "vi",
+    icons
+  };
+
+  const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  document.getElementById("pwa-manifest").setAttribute("href", url);
+})();
+
+// ─── Service Worker: Inline via Blob ─────────────────────────────────────────
+(function() {
+  const CACHE = "recomp-ai-v1";
+
+  const swCode = `
+const CACHE_NAME = "${("recomp-ai-v1")}";
+const ASSETS = ["/"];
+
+self.addEventListener("install", e => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      // Cache the page itself
+      return fetch(self.location.href.replace("sw.js","").replace(/\/sw-[^/]+\.js/,""))
+        .then(r => cache.put("/", r))
+        .catch(() => {});
+    })
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener("activate", e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener("fetch", e => {
+  if (e.request.method !== "GET") return;
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(res => {
+        if (!res || res.status !== 200) return res;
+        const clone = res.clone();
+        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match("/"));
+    })
+  );
+});
+`;
+
+  if (!("serviceWorker" in navigator)) return;
+
+  const blob = new Blob([swCode], { type: "application/javascript" });
+  const swUrl = URL.createObjectURL(blob);
+
+  navigator.serviceWorker.register(swUrl, { scope: "./" })
+    .then(reg => {
+      console.log("✅ SW registered", reg.scope);
+      // Cache the full page HTML on first visit
+      if (reg.installing) {
+        caches.open(CACHE).then(cache => {
+          cache.add(location.href);
+          // Also cache Tailwind CDN
+          cache.add("https://cdn.tailwindcss.com");
+        });
+      }
+    })
+    .catch(err => console.warn("SW error:", err));
+})();
+
+// ─── Install Prompt ───────────────────────────────────────────────────────────
+let deferredPrompt = null;
+const banner = document.getElementById("pwa-install-banner");
+const installBtn = document.getElementById("pwa-install-btn");
+const dismissBtn = document.getElementById("pwa-dismiss-btn");
+
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show banner only if not dismissed before
+  if (!localStorage.getItem("pwa-dismissed")) {
+    banner.classList.add("show");
+  }
+});
+
+installBtn.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === "accepted") {
+    banner.classList.remove("show");
+  }
+  deferredPrompt = null;
+});
+
+dismissBtn.addEventListener("click", () => {
+  banner.classList.remove("show");
+  localStorage.setItem("pwa-dismissed", "1");
+});
+
+window.addEventListener("appinstalled", () => {
+  banner.classList.remove("show");
+  deferredPrompt = null;
+  console.log("🎉 App installed!");
+});
+
+// Show install hint in header if already standalone
+if (window.matchMedia("(display-mode: standalone)").matches) {
+  const hint = document.createElement("p");
+  hint.className = "text-emerald-300 text-sm mt-1 font-semibold";
+  hint.textContent = "✅ Đang chạy như app!";
+  document.querySelector("h1").after(hint);
+}
 </script>
 
 </body>
